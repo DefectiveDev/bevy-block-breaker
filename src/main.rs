@@ -19,6 +19,23 @@ fn startup(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 
+    commands.spawn(
+        (
+            Sprite {
+                custom_size: Some(DEFAULT_PADDLE_SIZE),
+                color: SKY_50.into(),
+                ..default()
+            },
+            Transform::from_xyz(
+                0.,
+                -CANVAS_SIZE.y * (3. / 8.),
+                0.
+            ),
+            Paddle,
+            HalfSize(DEFAULT_PADDLE_SIZE / 2.),
+        )
+    );
+
     commands.spawn((
         Sprite {
             custom_size: Some(Vec2::new(
@@ -160,3 +177,12 @@ struct Velocity(Vec2);
 
 #[derive(Debug, Component)]
 struct Wall(Plane2d);
+
+const DEFAULT_PADDLE_SIZE: Vec2 = Vec2::new(200.,20.);
+const PADDLE_SPEED: f32 = 400.;
+
+#[derive(Component)]
+struct Paddle;
+
+#[derive(Debug, Component)]
+struct HalfSize(Vec2);
