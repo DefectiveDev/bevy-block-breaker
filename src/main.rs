@@ -1,5 +1,6 @@
 use bevy::{
     prelude::*,
+    camera::ScalingMode,
     color::palettes::tailwind::*
 };
 
@@ -17,7 +18,40 @@ fn startup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    commands.spawn(Camera2d);
+
+    commands.spawn((
+        Sprite {
+            custom_size: Some(Vec2::new(
+                CANVAS_SIZE.x + 4.,
+                CANVAS_SIZE.y +4.,
+            )),
+            color: Color::from(SKY_50),
+            ..default()
+        },
+        Transform::from_xyz(0.,0.,-3.),
+    ));
+
+    commands.spawn(
+        (
+            Sprite {
+                custom_size: Some(CANVAS_SIZE),
+                color: Color::from(SKY_800),
+                ..default()
+            },
+            Transform::from_xyz(0., 0., -2.),
+        )
+    );
+
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::AutoMin {
+                min_width: CANVAS_SIZE.x + BRICK_SIZE.x,
+                min_height: CANVAS_SIZE.y + BRICK_SIZE.y,
+            },
+            ..OrthographicProjection::default_2d()
+        }),
+    ));
 
     commands.spawn((
         Ball,
@@ -55,6 +89,10 @@ const BALL_SIZE: f32 = 10.;
 
 #[derive(Component)]
 struct Ball;
+
+const BRICK_SIZE: Vec2 = Vec2::new(80., 40.);
+
+const CANVAS_SIZE: Vec2 = Vec2::new(1280., 720.);
 
 #[derive(Debug, Component)]
 struct Velocity(Vec2);
