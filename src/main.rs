@@ -67,18 +67,79 @@ fn startup(
             Transform::from_xyz(0.,0.,1.),
         )]
     ));
+
+
+    commands.spawn(
+        (
+            Wall(Plane2d::new(Vec2::X)),
+            Transform::from_xyz(-CANVAS_SIZE.x / 2., 0., 0.)
+        )
+    );
+    commands.spawn(
+        (
+            Wall(Plane2d::new(Vec2::NEG_X)),
+            Transform::from_xyz(CANVAS_SIZE.x / 2., 0., 0.)
+        )
+    );
+    commands.spawn(
+        (
+            Wall(Plane2d::new(Vec2::Y)),
+            Transform::from_xyz(0., -CANVAS_SIZE.y / 2., 0.)
+        )
+    );
+    commands.spawn(
+        (
+            Wall(Plane2d::new(Vec2::NEG_Y)),
+            Transform::from_xyz(0., CANVAS_SIZE.y / 2., 0.)
+        )
+    );
 }
 
 fn ball_movement(
     mut balls: Query<
-        (&mut Transform, &Velocity),
+        (&mut Transform, &mut Velocity),
         With<Ball>
     >,
-    time: Res<Time>
+    walls: Query<(&Wall, &Transform), Without<Ball>>,
+    time: Res<Time>,
 ) {
-    for (mut transform, velocity) in &mut balls {
-        let ball_movement_this_frame = 
+    for (mut transform, mut velocity) in &mut balls {
+        // a ray that casts infinitely in the direction
+        // the ball is moving
+        let ball_ray =  Ray2d::new(
+            //location of ball
+            transform.translation.xy(),
+            // the direction the ball is moving
+            Dir2::new(velocity.0).unwrap(),
+        );
+
+        // how far the ball is going to go this frame
+        // reprsented as vec2
+        let mut ball_movement_this_frame = 
             velocity.0 * time.delta_secs();
+        let ball_move_distance =
+            ball_movement_this_frame.length();
+
+        // for each wall, check if we're going to hit it this frame
+        for (wall, origin) in walls {
+            if let Some(hit_distance) = ball_ray
+                .intersect_plane(
+                    origin.translation.xy(),
+                    wall.0
+                )
+                && hit_distance <= ball_move_distance
+            {
+                // velocity is just the reflection of the hit
+                // this is basically inverting the X or Y direction
+                // to move in the opposite direction
+                velocity.0 = velocity
+                    .0
+                    .reflect(wall.0.normal.as_vec2());
+                ball_movement_this_frame = 
+                    velocity.0 * time.delta_secs();
+                break;
+            }
+        }
 
         transform.translation += 
             ball_movement_this_frame.extend(0.);
@@ -96,3 +157,6 @@ const CANVAS_SIZE: Vec2 = Vec2::new(1280., 720.);
 
 #[derive(Debug, Component)]
 struct Velocity(Vec2);
+
+#[derive(Debug, Component)]
+struct Wall(Plane2d);
