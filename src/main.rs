@@ -9,7 +9,10 @@ fn main() -> AppExit{
         .insert_resource(ClearColor(Color::from(SKY_950)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, startup)
-        .add_systems(FixedUpdate, ball_movement)
+        .add_systems(FixedUpdate, (
+            ball_movement,
+            paddle_controls
+        ))
         .run()
 }
 
@@ -160,6 +163,22 @@ fn ball_movement(
 
         transform.translation += 
             ball_movement_this_frame.extend(0.);
+    }
+}
+
+fn paddle_controls(
+    input: Res<ButtonInput<KeyCode>>,
+    mut paddles: Query<&mut Transform, With<Paddle>>,
+    time: Res<Time>,
+) {
+    for mut transform in &mut paddles {
+        if input.pressed(KeyCode::ArrowLeft) {
+            transform.translation.x -=
+                PADDLE_SPEED * time.delta_secs();
+        } else if input.pressed(KeyCode::ArrowRight) {
+            transform.translation.x +=
+                PADDLE_SPEED * time.delta_secs();
+        }
     }
 }
 
